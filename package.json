@@ -1,0 +1,1 @@
+{"name":"dicky-news-design-studio-professional","version":"3.0.0","private":true,"type":"module","scripts":{"start":"node server/server.mjs","check":"node --check server/server.mjs && node --check public/studio-modules.js"},"engines":{"node":">=20"}}
