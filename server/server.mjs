@@ -34,6 +34,8 @@ const server=http.createServer(async(req,res)=>{try{
   const s=auth(req,res);if(!s)return;
   if(u.pathname==="/api/me")return json(res,200,{user:s.user});
   if(u.pathname==="/api/repos")return json(res,200,await gh(s.token,"/user/repos?per_page=100&sort=updated"));
+  const projectMatch=u.pathname.match(/^\/api\/projects\/([\w-]+)$/);
+  if(projectMatch){const f=pfile(projectMatch[1]);if(!fs.existsSync(f))return json(res,404,{error:"Proyek tidak ditemukan"});const p=JSON.parse(fs.readFileSync(f,"utf8"));if(p.owner!==s.user.login)return json(res,403,{error:"Akses ditolak"});return json(res,200,{project:p});}
   if(u.pathname==="/api/projects"){const dir=path.join(DATA,"projects");fs.mkdirSync(dir,{recursive:true});const all=fs.readdirSync(dir).filter(x=>x.endsWith(".json")).map(x=>JSON.parse(fs.readFileSync(path.join(dir,x),"utf8"))).filter(p=>p.owner===s.user.login);return json(res,200,{projects:all.map(({id,name,updatedAt,source})=>({id,name,updatedAt,source}))});}
  }
  if(req.method==="POST"&&u.pathname.startsWith("/api/")){

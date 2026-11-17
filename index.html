@@ -42,6 +42,15 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;color:inherit}.t
     <div class="field"><label>Atau buka file HTML lokal</label><input id="localfile" type="file" accept=".html,.htm,text/html"></div>
     <div class="hint">MVP ini mengimpor HTML dari repository publik atau file HTML. Untuk repository privat diperlukan koneksi GitHub yang aman.</div>
   </div>
+  <div class="panel-head">PROYEK & VERSI CLOUD</div>
+  <div class="section">
+    <div class="field"><label>Nama proyek</label><input id="projectname" value="Dicky News Website"></div>
+    <button class="btn primary" id="githublogin" style="width:100%">Hubungkan GitHub</button>
+    <div class="row" style="margin-top:7px"><button class="btn" id="cloudsave">Simpan Cloud</button><button class="btn" id="snapshot">Buat Snapshot</button></div>
+    <div class="field"><label>Proyek tersimpan</label><select id="projectlist"><option value="">Pilih proyek...</option></select></div>
+    <button class="btn" id="loadprojects" style="width:100%">Muat daftar proyek</button>
+    <p class="hint" id="cloudstatus">Login GitHub diperlukan untuk penyimpanan cloud dan version history.</p>
+  </div>
   <div class="panel-head">STRUKTUR / LAYERS</div>
   <div class="section"><div class="tree" id="tree"><div class="empty-props">Impor website untuk membaca elemen dan susunannya.</div></div></div>
   <div class="panel-head">TAMBAH ELEMEN</div>
@@ -189,6 +198,34 @@ function applyComponentEffects(){
 }
 function applyPageEffect(){if(!doc)return toast("Impor website terlebih dahulu");doc.body.classList.remove("dn-page-fade","dn-page-rise");if($("#pagefx").value)doc.body.classList.add($("#pagefx").value);snapshot();toast("Efek halaman diterapkan")}
 
+let cloudProjectId=null;
+async function api(path,options={}){const res=await fetch(path,{credentials:"same-origin",headers:{"content-type":"application/json",...(options.headers||{})},...options});const data=await res.json().catch(()=>({}));if(!res.ok)throw Error(data.error||"Permintaan server gagal ("+res.status+")");return data}
+function setCloudStatus(text){const el=$("#cloudstatus");if(el)el.textContent=text}
+async function cloudSave(){
+ if(!doc)return toast("Impor website sebelum menyimpan proyek");
+ try{
+  const files={"index.html":composeExportHTML()};
+  if(!cloudProjectId){const made=await api("/api/projects",{method:"POST",body:JSON.stringify({name:$("#projectname").value,source:{repo:$("#repo").value,branch:$("#branch").value,entry:$("#entry").value},files})});cloudProjectId=made.project.id;}
+  else await api("/api/projects/"+cloudProjectId+"/save",{method:"POST",body:JSON.stringify({name:$("#projectname").value,files})});
+  setCloudStatus("Tersimpan di cloud · "+new Date().toLocaleString("id-ID"));toast("Proyek berhasil disimpan ke cloud");await loadCloudProjects();
+ }catch(e){setCloudStatus(e.message);toast(e.message)}
+}
+async function loadCloudProjects(){
+ try{const data=await api("/api/projects");const sel=$("#projectlist");sel.innerHTML='<option value="">Pilih proyek...</option>';data.projects.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name+" · "+new Date(p.updatedAt).toLocaleDateString("id-ID");sel.appendChild(o)});setCloudStatus(data.projects.length+" proyek tersedia di cloud")}
+ catch(e){setCloudStatus(e.message);toast(e.message)}
+}
+async function createCloudSnapshot(){
+ if(!cloudProjectId)return toast("Simpan proyek ke cloud terlebih dahulu");
+ try{const data=await api("/api/projects/"+cloudProjectId+"/snapshot",{method:"POST",body:JSON.stringify({label:"Snapshot "+new Date().toLocaleString("id-ID")})});toast("Snapshot tersimpan · "+data.versions.length+" versi");}
+ catch(e){toast(e.message)}
+}
+async function loadCloudProject(){
+ const id=$("#projectlist").value;if(!id)return;
+ try{const data=await api("/api/projects/"+id);cloudProjectId=id;const html=data.project.files?.["index.html"];if(!html)throw Error("File index.html tidak ditemukan di proyek");sourceBase="";loadHTML(html);$("#projectname").value=data.project.name;setCloudStatus("Proyek cloud dimuat · "+data.project.name);toast("Proyek berhasil dimuat")}
+ catch(e){toast(e.message)}
+}
+$("#githublogin").onclick=()=>location.href="/auth/github";
+$("#cloudsave").onclick=cloudSave;$("#snapshot").onclick=createCloudSnapshot;$("#loadprojects").onclick=loadCloudProjects;$("#projectlist").onchange=loadCloudProject;
 async function importRepo(){const repo=$("#repo").value.trim(),branch=$("#branch").value.trim()||"main",entry=$("#entry").value.trim()||"index.html";if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){toast("Format repository harus pemilik/nama-repo");return}$("#import").disabled=true;$("#import").textContent="Mengambil...";try{const url=`https://raw.githubusercontent.com/${repo}/${encodeURIComponent(branch)}/${entry.split("/").map(encodeURIComponent).join("/")}`;const res=await fetch(url);if(!res.ok)throw Error("File tidak ditemukan atau repository tidak publik (HTTP "+res.status+")");const html=await res.text();if(!/<html[\s>]/i.test(html))throw Error("File yang diambil bukan dokumen HTML");sourceBase=`https://raw.githubusercontent.com/${repo}/${branch}/${entry.includes("/")?entry.slice(0,entry.lastIndexOf("/"))+"/":""}`;loadHTML(html);toast("Struktur website berhasil ditarik. Mode preview aman aktif.");}catch(err){toast(err.message||"Gagal mengimpor website")}finally{$("#import").disabled=false;$("#import").textContent="Tarik Struktur Website"}}
 $("#import").onclick=importRepo;$("#localfile").onchange=async e=>{const f=e.target.files[0];if(f){sourceBase="";loadHTML(await f.text());toast("File HTML lokal berhasil dibuka")}};
 $$("[data-add]").forEach(b=>b.onclick=()=>addElement(b.dataset.add));
