@@ -39,6 +39,8 @@ const server=http.createServer(async(req,res)=>{try{
   if(u.pathname==="/api/projects"){const dir=path.join(DATA,"projects");fs.mkdirSync(dir,{recursive:true});const all=fs.readdirSync(dir).filter(x=>x.endsWith(".json")).map(x=>JSON.parse(fs.readFileSync(path.join(dir,x),"utf8"))).filter(p=>p.owner===s.user.login);return json(res,200,{projects:all.map(({id,name,updatedAt,source})=>({id,name,updatedAt,source}))});}
  }
  if(req.method==="POST"&&u.pathname.startsWith("/api/")){
+  const origin=req.headers.origin;
+  if(!origin||new URL(origin).host!==req.headers.host)return json(res,403,{error:"Permintaan lintas-origin ditolak"});
   const s=auth(req,res);if(!s)return;const b=await body(req);
   if(u.pathname==="/api/projects"){const p={id:crypto.randomUUID(),owner:s.user.login,name:String(b.name||"Proyek baru").slice(0,120),source:b.source||null,files:b.files||{},versions:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};save(p);return json(res,201,{project:p});}
   const m=u.pathname.match(/^\/api\/projects\/([\w-]+)\/(save|snapshot|restore)$/);

@@ -13,10 +13,10 @@ Visual Editor; Precision Layout; Navigation Studio; Animation Studio; Component 
 2. Copy .env.example to .env and set a random STUDIO_SESSION_SECRET.
 3. Create a GitHub OAuth App; callback URL is /auth/github/callback. Keep client secret and access tokens on the backend only.
 4. Run npm start and open http://127.0.0.1:8787.
-5. Run npm run check.
+5. Run npm run check and npm test.
 
 ## Backend foundation
-GitHub OAuth callback, server-side sessions, repository listing, project persistence, snapshots/restore and a GitHub contents commit endpoint. Project JSON is stored under the configured STUDIO_DATA_DIR.
+GitHub OAuth callback, server-side sessions, repository listing, project persistence, snapshots/restore and a GitHub contents commit endpoint. Project JSON is stored under the configured STUDIO_DATA_DIR. Mutating API requests require a same-origin Origin header.
 
 ## Production hardening still required
-Use HTTPS and secure cookie handling at the reverse proxy, persistent database/object storage, CSRF protection, rate limiting, audit logging, encrypted token/session storage, OAuth scope minimization and tested authorization. AI execution, multi-file asset rewriting, full CMS, real-time collaboration, PR/staging orchestration, media transformations and automated Core Web Vitals require dedicated provider/infrastructure integrations and regression testing. Do not claim these integrations are production-ready until tested.
+Use HTTPS and secure cookie handling at the reverse proxy, persistent database/object storage, rate limiting, audit logging, encrypted token/session storage, OAuth scope minimization and tested authorization. AI execution, multi-file asset rewriting, full CMS, real-time collaboration, PR/staging orchestration, media transformations and automated Core Web Vitals require dedicated provider/infrastructure integrations. Do not claim these integrations are production-ready until tested.
