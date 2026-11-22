@@ -11,7 +11,7 @@ Visual Editor; Precision Layout; Navigation Studio; Animation Studio; Component 
 ## Development setup
 1. Node.js 20+.
 2. Copy .env.example to .env and set a random STUDIO_SESSION_SECRET.
-3. Create a GitHub OAuth App; callback URL is /auth/github/callback. Keep client secret and access tokens on the backend only.
+3. For GitHub Pages private-repository login, create a GitHub App once in GitHub Developer Settings. Enable Device Flow, set repository permissions `Contents: Read-only` and `Metadata: Read-only`, install it only on the repositories Studio should open, then put the App OAuth Client ID in `GITHUB_OAUTH_CLIENT_ID` inside `index.html`. The device flow uses no client secret; access tokens remain in tab memory. Do not use an OAuth App with broad `repo` write scope.
 4. Run npm start and open http://127.0.0.1:8787.
 5. Run npm run check and npm test.
 
