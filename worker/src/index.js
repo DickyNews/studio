@@ -35,6 +35,8 @@ export default {
       const allowed = pathname === "/user" || pathname === "/user/installations" ||
         /^\/user\/installations\/\d+\/repositories$/.test(pathname) ||
         pathname === "/users/DickyNews/repos" ||
+        /^\/repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(pathname) ||
+        /^\/repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/git\/trees\/[^/]+$/.test(pathname) ||
         /^\/repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/contents(?:\/.*)?$/.test(pathname);
       if (!allowed) return response(JSON.stringify({ message: "Endpoint not allowed" }), 403, origin);
       const upstream = await fetch("https://api.github.com" + apiPath, { headers: {
